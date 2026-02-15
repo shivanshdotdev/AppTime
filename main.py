@@ -15,7 +15,7 @@ TEMP_LOG_FILE_PATH = APP_DIR/"session_log.json"
 PERM_LOG_FILE_PATH = APP_DIR/"usage_log.json"
 
 apps_to_track = [ 'aseprite.exe', 'krita.exe', 'animate.exe', 'blender.exe', 'pencil2d.exe', 'godot_v4.6-stable_win64.exe', 'capcut.exe']
-icon_img_file = 'eyes.ico'
+icon_img_file = 'assets/eyes.ico'
 
 time_tracker_dict = {}  
 
@@ -24,7 +24,7 @@ def save_to_temporary_log() -> None:
     with open(TEMP_LOG_FILE_PATH, 'w') as file:
         json.dump(time_tracker_dict, file, indent=4)
 
-def save_to_persistent_log(app:str, duration: float) -> None:
+def save_to_perm_log(app:str, duration: float) -> None:
 
     temp_dict = {}
 
@@ -34,7 +34,7 @@ def save_to_persistent_log(app:str, duration: float) -> None:
     except: 
         pass
     
-    temp_dict[app] = duration
+    temp_dict[app] += duration
 
     with open(PERM_LOG_FILE_PATH, 'w') as file:
         json.dump(temp_dict, file, indent=4)
@@ -64,7 +64,7 @@ def stop_tracking(app:str) -> None:
             del time_tracker_dict[app_id]
             app_run_time = calculate_app_run_time(app_id)
             print(f"app run time for {app} is {app_run_time}")
-            save_to_persistent_log(app, app_run_time)
+            save_to_perm_log(app, app_run_time)
             break
 
 def main() -> None:
@@ -82,10 +82,8 @@ def main() -> None:
 
         print("Polling..........................")
         print(f"Tracked Apps: {time_tracker_dict}")
-
               
         for app_under_radar in apps_to_track:
-
             for app_process in all_running_apps:
 
                 if app_under_radar not in apps_being_tracked: # app not being tracked by us
@@ -105,6 +103,7 @@ def system_tray() -> None:
     def quit_action(icon):
         global ALLOWED_TO_RUN
         ALLOWED_TO_RUN = False
+        Path.unlink(TEMP_LOG_FILE_PATH)
         icon.stop()
 
     icon_img = Image.open(icon_img_file)
